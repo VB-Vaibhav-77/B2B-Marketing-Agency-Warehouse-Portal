@@ -24,22 +24,49 @@ def main():
         print(f"❌ Error reading SQL file: {e}")
         sys.exit(1)
 
-    # Step 2: Get Google Cloud Project ID from the user
-    print("💡 Tip: You can find your Project ID at the top left of the Google Cloud console.")
-    project_id = input("👉 Enter your Google Cloud Project ID: ").strip()
-    if not project_id:
-        print("❌ Error: Project ID cannot be empty. Please run the script again.")
-        sys.exit(1)
+    # Step 2: Get Google Cloud Project ID
+    project_id = os.environ.get("GCP_PROJECT_ID", "").strip()
+    if project_id:
+        print(f"👉 Using Project ID from environment: {project_id}")
+    else:
+        print("💡 Tip: You can find your Project ID at the top left of the Google Cloud console.")
+        project_id = input("👉 Enter your Google Cloud Project ID: ").strip()
+        if not project_id:
+            print("❌ Error: Project ID cannot be empty. Please run the script again.")
+            sys.exit(1)
 
-    print(f"\n🔐 Triggering Google OAuth authentication...")
-    print("A browser window will open shortly. Please select your Google account and click 'Allow'.\n")
+    import json
+    print("\n🔐 Authenticating with Google Cloud Platform...")
 
     try:
-        # Request standard BigQuery cloud-platform scopes
-        credentials = pydata_google_auth.get_user_credentials(
-            scopes=["https://www.googleapis.com/auth/cloud-platform"],
-            auth_local_webserver=True
-        )
+        credentials = None
+        gcp_key_env = os.environ.get("GCP_CREDENTIALS")
+        
+        if gcp_key_env:
+            # 1. Load from environment variable (CI/CD cloud uploader)
+            print(" -> [CLOUD] Loading credentials from GitHub Action Secret environment variable...")
+            import google.oauth2.service_account
+            key_dict = json.loads(gcp_key_env)
+            credentials = google.oauth2.service_account.Credentials.from_service_account_info(
+                key_dict,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+        elif os.path.exists(os.path.join("data", "gcp_credentials.json")):
+            # 2. Load from local git-ignored JSON key
+            print(" -> [KEYFILE] Loading credentials from local git-ignored JSON key...")
+            import google.oauth2.service_account
+            credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+                os.path.join("data", "gcp_credentials.json"),
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+        else:
+            # 3. Fallback to interactive browser OAuth (Default local behavior)
+            print(" -> [OAuth] Triggering Google OAuth interactive browser login...")
+            print("A browser window will open shortly. Please select your Google account and click 'Allow'.\n")
+            credentials = pydata_google_auth.get_user_credentials(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                auth_local_webserver=True
+            )
         
         print("✓ Credentials successfully authenticated!")
         print(f"✓ Preparing query on project: {project_id}")

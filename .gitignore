@@ -16,6 +16,7 @@ data/processed_agency/
 *.db
 *.csv
 *.log
+data/gcp_credentials.json
 
 # IDE files
 .vscode/

@@ -45,6 +45,14 @@ jobs:
         python main.py
         python main_agency.py
 
+    - name: Upload Clean B2B and B2C Tables & Views to Google BigQuery Cloud
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      run: |
+        python run_bigquery_agency.py
+        python run_bigquery_analysis.py
+
     - name: Archive compiled B2C SQLite database artifact
       uses: actions/upload-artifact@v4
       with:
