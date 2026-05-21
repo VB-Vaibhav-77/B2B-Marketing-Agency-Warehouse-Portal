@@ -178,3 +178,106 @@ cohort_month,cohort_size,month_index,active_clients,total_billing,client_retenti
 ```
 
 This completes all verification and operational metrics! The database and automated test suite are fully compiled, 100% operational, and ready to display recruiter-wowing insights in Power BI.
+
+---
+
+## 🌐 Google BigQuery Cloud Warehouse Integration & Service Account Automation
+
+We have achieved **100% live cloud database connectivity**. Every single code push or weekly schedule now triggers a completely automated cloud ingestion and validation pipeline. 
+
+### 1. Automated GCP Key Generation (`create_sa_and_keys.py`)
+To ensure a secure, developer-friendly experience with **zero browser console manual setup**, we developed a programmatic API key generator:
+* **GCP API Enablement**: Programmatically checks and enables the **Identity & Access Management (IAM) API** and the **Cloud Resource Manager API** using service usage calls with custom `X-Goog-User-Project` quota headers.
+* **Service Account Creation**: Automatically creates a dedicated IAM Service Account (`github-actions-bq`) in your GCP project.
+* **Role Binding**: Automatically binds the **BigQuery Admin** permission to the service account.
+* **Key Ingestion & Storage**: Generates a secure JSON private key, downloads it locally to a git-ignored path (`data/gcp_credentials.json`), and automatically uploads it to GitHub Repository Secrets as `GCP_CREDENTIALS` along with `GCP_PROJECT_ID` using the GitHub CLI.
+
+### 2. Live Cloud Loading Execution Results
+Running `python run_bigquery_agency.py` processes the high-fidelity B2B datasets and streams them directly into Google Cloud BigQuery in under 10 seconds:
+```text
+👉 Using Project ID from environment: apex-analytics-496821
+🔐 Authenticating with Google Cloud Platform...
+ -> [KEYFILE] Loading credentials from local git-ignored JSON key...
+✓ Credentials successfully authenticated!
+✓ Target Project: apex-analytics-496821
+✓ Target Dataset: apex_analytics
+
+⏳ Verification: Ensuring BigQuery dataset 'apex_analytics' exists...
+ -> [OK] Dataset 'apex_analytics' exists.
+
+══════════════════════════════════════════════════════════════════════
+                UPLOADING B2B DATASETS TO GOOGLE BIGQUERY
+══════════════════════════════════════════════════════════════════════
+⏳ Uploading 'dim_account_managers.csv' to table 'apex_analytics.dim_account_managers'...
+✅ Success! Loaded 10 rows into table 'dim_account_managers'.
+
+⏳ Uploading 'dim_clients.csv' to table 'apex_analytics.dim_clients'...
+✅ Success! Loaded 100 rows into table 'dim_clients'.
+
+⏳ Uploading 'dim_campaigns.csv' to table 'apex_analytics.dim_campaigns'...
+✅ Success! Loaded 366 rows into table 'dim_campaigns'.
+
+⏳ Uploading 'dim_date.csv' to table 'apex_analytics.dim_date_agency'...
+✅ Success! Loaded 847 rows into table 'dim_date_agency'.
+
+⏳ Uploading 'fact_ad_performance.csv' to table 'apex_analytics.fact_ad_performance'...
+✅ Success! Loaded 188913 rows into table 'fact_ad_performance'.
+
+⏳ Uploading 'fact_client_billing.csv' to table 'apex_analytics.fact_client_billing'...
+✅ Success! Loaded 1743 rows into table 'fact_client_billing'.
+
+⏳ Uploading 'manager_portfolio_results.csv' to table 'apex_analytics.manager_portfolio_results'...
+✅ Success! Loaded 10 rows into table 'manager_portfolio_results'.
+
+⏳ Uploading 'campaign_channel_results.csv' to table 'apex_analytics.campaign_channel_results'...
+✅ Success! Loaded 5 rows into table 'campaign_channel_results'.
+
+⏳ Uploading 'client_billing_cohorts.csv' to table 'apex_analytics.client_billing_cohorts'...
+✅ Success! Loaded 370 rows into table 'client_billing_cohorts'.
+══════════════════════════════════════════════════════════════════════
+
+🎉 CONGRATULATIONS! ALL 9 B2B AGENCY TABLES ARE LOADED IN BIGQUERY!
+```
+
+### 3. Live Analytical View Creation Results
+Running `python run_bigquery_analysis.py` successfully runs the multi-fact attribution window queries directly inside the Google Cloud engine and creates a permanent SQL View (`view_marketing_attribution`) in the cloud:
+```text
+👉 Using Project ID from environment: apex-analytics-496821
+🔐 Authenticating with Google Cloud Platform...
+ -> [KEYFILE] Loading credentials from local git-ignored JSON key...
+✓ Credentials successfully authenticated!
+✓ Preparing query on project: apex-analytics-496821
+
+⏳ Executing query in Google Cloud BigQuery... please wait a few seconds...
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+                                       BIGQUERY MARKETING ATTRIBUTION RESULTS
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+ traffic_source  total_sessions  bounced_sessions  bounce_rate_pct  session_conversion_rate_pct  total_orders  units_sold  gross_revenue  revenue_per_session  average_order_value
+       Referral       1473              96              6.52                  24.71                   28          104        27708.85           18.81                989.60       
+       Paid Ads       1483              94              6.34                  23.74                   21           93        21875.62           14.75               1041.70       
+ Organic Search       1519             109              7.18                  25.28                   22           82        19231.94           12.66                874.18       
+         Direct       1503             124              8.25                  25.55                   20           67        11002.43            7.32                550.12       
+Paid Google Ads       1537             110              7.16                  23.36                   16           53         9497.24            6.18                593.58       
+   Social Media       1529             108              7.06                  24.85                    9           26         7225.43            4.73                802.83       
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+🎉 Success! Cloud query executed successfully!
+📂 Results saved locally to your workspace at: data\bigquery_attribution_results.csv
+
+🛠️ Creating a permanent view 'view_marketing_attribution' inside your BigQuery 'apex_analytics' dataset...
+✅ Success! View 'view_marketing_attribution' is now created permanently in your BigQuery account.
+```
+
+### 4. Fully Connected CI/CD Automation Workflow
+Our GitHub Actions pipeline is now fully integrated. On every push or pull request to the `main` or `master` branches, the cloud runner automatically:
+1. Installs Python 3.11 and sets up dependencies.
+2. Checks syntax and coding standards via `flake8`.
+3. Runs all 6 unit tests with `pytest`.
+4. Executes the B2C (`main.py`) and B2B (`main_agency.py`) ETL pipelines.
+5. Performs the 23-point database quality validation check.
+6. Authenticates with GCP using `secrets.GCP_CREDENTIALS`.
+7. Uploads the fresh facts, dimensions, and analytics tables directly to **Google BigQuery** in the cloud.
+8. Archives SQLite databases (`apex_analytics.db`, `agency_analytics.db`) and CSV reports as downloadable build artifacts.
+
+This represents a **production-ready modern data pipeline** that seamlessly connects code version control (GitHub) to a live cloud data warehouse (Google BigQuery) feeding directly into your interactive dashboards!

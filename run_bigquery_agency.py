@@ -119,7 +119,9 @@ def main():
             df = pd.read_csv(csv_path)
             
             # Upload using pandas-gbq
-            df.to_gbq(
+            import pandas_gbq
+            pandas_gbq.to_gbq(
+                df,
                 destination_table=destination_table,
                 project_id=project_id,
                 credentials=credentials,
