@@ -1,0 +1,23 @@
+# Python temporary and cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.pytest_cache/
+*.pyc
+
+# Local transactional datasets & SQLite databases
+# Note: Keep the folder structures, but ignore the large generated DBs and CSVs
+# GitHub Actions compiles these automatically in CI/CD anyway!
+data/raw/
+data/raw_agency/
+data/processed/
+data/processed_agency/
+*.db
+*.csv
+*.log
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
