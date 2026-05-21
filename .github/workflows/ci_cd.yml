@@ -38,7 +38,7 @@ jobs:
 
     - name: Run Unit Tests with pytest
       run: |
-        pytest tests/ -v
+        python -m pytest tests/ -v
 
     - name: Execute Full B2C and B2B ETL Pipelines & Validate Data
       run: |
