@@ -50,10 +50,14 @@ The data warehouse models two distinct corporate operational facts sharing commo
 │   ├── raw_agency/               # Raw B2B digital agency CSV datasets (generated)
 │   ├── processed/                # Cleansed B2C dimension and fact tables (star schema)
 │   ├── processed_agency/         # Cleansed B2B dimension and fact tables (galaxy schema)
-│   ├── apex_analytics.db         # Compiled local B2C SQLite database
-│   ├── agency_analytics.db       # Compiled local B2B SQLite database
+│   ├── apex_analytics.db         # Final compiled SQLite relational database
+│   ├── agency_analytics.db       # Final compiled B2B SQLite database
 │   └── gcp_credentials.json      # Git-ignored GCP service account credentials keyfile
 ├── power_bi/
+│   ├── images/                   # Copied dashboard page screenshots for GitHub portfolio
+│   │   ├── b2c_ecommerce_operations.png
+│   │   ├── b2b_agency_operations.png
+│   │   └── marketing_attribution_portal.png
 │   └── power_bi_playbook.md      # Power BI Galaxy Schema specifications & DAX libraries
 ├── src/
 │   ├── data_generator/
@@ -92,34 +96,44 @@ The warehouse compiles highly complex B2B and B2C business intelligence reports 
 Combines transactional metrics per customer, ranks them into quintiles using `NTILE(5)`, and classifies buyers into active marketing tiers (e.g., *Champions* with high recency/frequency vs. *At Risk* and *Lost* customers).
 
 ### 2. Client Month-over-Month Cohort Retention (`cohort_retention.sql`)
-Analyzes onboarding transaction dates to group clients into acquisition cohorts, tracking their billing retention over a rolling 24-month period to identify churn rates.
+Onboarding dates are analyzed to group clients into monthly cohorts, tracking elapsed billing retention trends over a rolling 24-month horizon.
 
 ### 3. Clickstream Multi-Touch Marketing Attribution (`attribution_analysis.sql`)
-Maps web traffic clickstreams to actual order conversions by identifying the highest-engagement session occurring on the day of purchase, resolving attribution ROI across 6 digital channels.
+Maps web traffic sessions directly to sales transactions by joining engagement clickstreams on the exact date of order placement, evaluating multi-channel campaign ROAS.
 
 ---
 
 ## 📊 The 3-Page Executive Power BI Dashboard Portal
 
-The business intelligence layer consists of an ultra-premium **Dark Glassmorphic Portal** (`#080C14` canvas, `#111827` slate card backgrounds, and custom page navigation) directly connected to Google BigQuery in Import Mode:
+The business intelligence layer is a highly visual, Dark Glassmorphic Dashboard Portal built directly in Power BI Desktop connected to Google BigQuery:
 
 ### Page 1: B2C E-Commerce Operations & RFM Customer Analytics (Electric Blue Theme)
-* **High-Level KPIs**: Total Revenue, Average Order Value (AOV), E-Commerce Conversion Rate, and Units Sold.
-* **Monthly Revenue & Conversion Trends**: A dual-axis Line and Stacked Column Chart showing transactional cash flow correlated with website performance over time.
-* **Category Market Share**: A Donut Chart outlining product revenue distribution.
+* **Visual KPIs**: Total Revenue, Average Order Value (AOV), E-Commerce Conversion Rate, and Units Sold.
+* **Monthly Revenue & Conversion Trends**: A dual-axis Line and Stacked Column Chart showing monthly sales trends correlated with web conversion ratios.
+* **Category Market Share**: A Donut Chart displaying gross product sales distributions.
 * **RFM Cohort Value Matrix**: A Matrix Heatmap matching Recency (R) vs. Frequency (F) scores on a coral-to-electric-blue gradient, allowing interactive cross-filtering of the bottom **High-Value Customer Transactions Audit Table**.
 
+![B2C E-Commerce Dashboard Portal Screen](power_bi/images/b2c_ecommerce_operations.png)
+
+---
+
 ### Page 2: B2B Agency Operations & Cohort Retention (Emerald Green Theme)
-* **High-Level KPIs**: Total Billing Managed, Managed Ad Spend, Overall ROAS, and Active Client Count.
+* **Visual KPIs**: Total Billing Managed, Managed Ad Spend, Overall ROAS, and Active Client Count.
 * **Account Manager Performance Audit**: A Clustered Column Chart comparing actual invoiced billings against monthly target revenues. Uses the custom DAX `[B2B Average Monthly Billing]` measure to resolve cumulative timeline grain mismatches.
 * **MoM Revenue Retention Heatmap**: An advanced matrix visual mapping client onboarding cohorts against elapsed billing lifecycle decay using an emerald green gradient.
 * **Multi-Channel Campaign Performance Table**: A clean performance grid tracking ad spend, CTR, CPA, and ROAS by channel, with custom teal data bars.
 
+![B2B Agency Operations Dashboard Screen](power_bi/images/b2b_agency_operations.png)
+
+---
+
 ### Page 3: Marketing Multi-Touch Attribution Portal (Glow Violet Theme)
-* **High-Level KPIs**: Gross Revenue, Attributed Orders, Web Conversion Rate, and Click Session Volume.
+* **Visual KPIs**: Gross Revenue, Attributed Orders, Web Conversion Rate, and Click Session Volume.
 * **Attribution Traffic Audit**: A dense table visual mapping web clickstreams to revenue, utilizing a glowing violet gradient heatmap on gross revenue.
 * **Friction vs. Conversion Efficiency Scatter Plot**: Plotted using Bounce Rate (X-Axis) vs. Conversion Rate (Y-Axis) by channel, with bubble size representing total revenue. Immediately identifies high-friction ad channels.
 * **Clickstream to Conversion Trend**: An interactive dual-axis trend chart mapping monthly session volume against attributed cash flow.
+
+![Marketing Multi-Touch Attribution Portal Screen](power_bi/images/marketing_attribution_portal.png)
 
 ---
 
@@ -136,7 +150,7 @@ python main_agency.py
 
 ### 2. Execute the test suite:
 ```bash
-pytest tests/ -v
+python -m pytest tests/ -v
 ```
 
 ### 3. Automate GCP BigQuery Setup:
