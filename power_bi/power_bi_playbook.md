@@ -1,252 +1,240 @@
-# ApexAnalytics: Corporate Power BI Dashboard Playbook
-This playbook outlines the exact blueprint to translate the clean relational database model into a premium, interactive, multi-page corporate Power BI dashboard. Recruiters will be deeply impressed by this corporate-level design logic and the advanced **Galaxy Schema (Fact Constellation)** data model.
+# Corporate-Grade Power BI Enterprise Playbook
+
+This playbook establishes the technical guidelines, complex DAX formulas, and high-density visual specifications required to build a true **Enterprise Analytics Portal** from scratch. 
+
+We completely reject "school-project" simplicity (which relies on single cards and basic bar charts) in favor of **dense data matrices, multi-tiered hierarchies, drill-down capabilities, advanced DAX, and professional HSL-based conditional formatting**.
 
 ---
 
-## 1. Relational Data Model (Galaxy Schema / Fact Constellation)
-Within Power BI, set up the following relationships. Enforce **1-to-Many (1:*)** cardinality and **Single Directional** cross-filter direction to optimize performance (Standard Enterprise Best Practice).
+## 🎨 1. Enterprise Visual Design & Grid System
 
-```mermaid
-erDiagram
-    dim_customers ||--o{ fact_sales : "customer_id (1:*)"
-    dim_customers ||--o{ fact_web_traffic : "customer_id (1:*)"
-    dim_products ||--o{ fact_sales : "product_id (1:*)"
-    dim_date ||--o{ fact_sales : "order_date -> date_key (1:*)"
-    dim_date ||--o{ fact_web_traffic : "session_date -> date_key (1:*)"
-```
+To look corporate, the dashboard uses a **Unified Dark Slate Glassmorphic Theme** with high information density, clear visual hierarchies, and distinct functional sections.
 
-### Model Relationships:
-1. **Fact Sales Connections**:
-   * `dim_customers[customer_id]` (1) ➡️ `fact_sales[customer_id]` (*)
-   * `dim_products[product_id]` (1) ➡️ `fact_sales[product_id]` (*)
-   * `dim_date[date_key]` (1) ➡️ `fact_sales[order_date]` (*)
-2. **Fact Web Traffic Connections**:
-   * `dim_customers[customer_id]` (1) ➡️ `fact_web_traffic[customer_id]` (*)
-   * `dim_date[date_key]` (1) ➡️ `fact_web_traffic[session_date]` (*)
-
----
-
-## 2. Dynamic DAX Measurement Library
-Create a dedicated table named `_Measures` in Power BI to store these formulas. This keeps the data pane clean and organized.
-
-### Core Sales Metrics
-```dax
-Total Revenue = SUM(fact_sales[line_subtotal])
-```
-```dax
-Total Quantity = SUM(fact_sales[quantity])
-```
-```dax
-Total Shipping Fee = SUM(fact_sales[shipping_fee])
-```
-```dax
-Total Sales Transactions = DISTINCTCOUNT(fact_sales[order_id])
-```
-```dax
-Average Order Value (AOV) = DIVIDE([Total Revenue], [Total Sales Transactions], 0)
-```
-```dax
-Active CustomersCount = DISTINCTCOUNT(fact_sales[customer_id])
-```
-
-### Time Intelligence & YoY Growth
-```dax
-Revenue Prior Year (PY) = 
-CALCULATE(
-    [Total Revenue], 
-    SAMEPERIODLASTYEAR(dim_date[date])
-)
-```
-```dax
-YoY Revenue Growth % = 
-DIVIDE(
-    [Total Revenue] - [Revenue Prior Year (PY)], 
-    [Revenue Prior Year (PY)], 
-    0
-)
-```
-
-### Dynamic Cohort Retention
-```dax
-Active Customers = DISTINCTCOUNT(fact_sales[customer_id])
-```
-```dax
-Cohort Starting Customers = 
-CALCULATE(
-    [Active Customers],
-    ALLEXCEPT(fact_sales, dim_date[year], dim_date[month_name]),
-    fact_sales[month_index] = 0
-)
-```
-```dax
-Cohort Retention % = 
-DIVIDE(
-    [Active Customers],
-    [Cohort Starting Customers],
-    0
-)
-```
-
-### Web Clickstream & Conversion Metrics
-```dax
-Total Sessions = COUNT(fact_web_traffic[session_id])
-```
-```dax
-Total Pageviews = SUM(fact_web_traffic[pages_viewed])
-```
-```dax
-Pageviews per Session = DIVIDE([Total Pageviews], [Total Sessions], 0)
-```
-```dax
-Bounced Sessions = SUM(fact_web_traffic[bounced])
-```
-```dax
-Bounce Rate % = DIVIDE([Bounced Sessions], [Total Sessions], 0)
-```
-```dax
-Converted Sessions = SUM(fact_web_traffic[converted])
-```
-```dax
-Session Conversion Rate % = DIVIDE([Converted Sessions], [Total Sessions], 0)
-```
-```dax
-Average Session Duration (sec) = AVERAGE(fact_web_traffic[duration_seconds])
-```
-
----
-
-## 3. High-Impact Corporate Visual Setup
-
-### Page 1: Executive KPI & Financial Performance Matrix
-This page mimics a high-level corporate financial overview.
-
-1. **KPI Cards (Multi-Row / New Card Visual)**:
-   * Fields: `[Total Revenue]`, `[AOV]`, `[Active CustomersCount]`, `[YoY Revenue Growth %]`.
-   * Formatting: Enable shadow, rounded corners (8px). Under callout values, set `YoY Revenue Growth %` font color dynamically (Green for positive, Red for negative).
-2. **Sales & Profit Margin Trend Chart**:
-   * Visual: *Line and clustered column chart*.
-   * X-Axis: `dim_date[year]`, `dim_date[month_name]`.
-   * Column Values: `[Total Revenue]`.
-   * Line Values: `[YoY Revenue Growth %]`.
-3. **Category vs. Region Performance Matrix**:
-   * Visual: **Matrix Visual** (Corporate Pivot Table).
-   * Rows: `dim_products[category]`.
-   * Columns: `dim_customers[country]`.
-   * Values: `[Total Revenue]`.
-   * **Active Conditional Formatting (Data Bars)**:
-     * Select `Total Revenue` ➡️ Conditional Formatting ➡️ Data Bars. Set positive bar color to a slick teal gradient.
-   * **KPI Indicators Flag (DAX)**:
-     ```dax
-     Sales Status Indicator = 
-     VAR TargetSales = 5000
-     RETURN 
-     IF([Total Revenue] >= TargetSales, "🟢 Above Target", 
-     IF([Total Revenue] >= TargetSales * 0.7, "🟡 Meets 70%", "🔴 Critical Action"))
-     ```
-     Place this indicator adjacent to names to showcase operational alert models!
-
----
-
-### Page 2: Cohort Retention Grid (The "Retention Matrix")
-This is the single most important visual for showing recruiter expertise in subscription or retail business models.
-
-1. **Cohort Retention Heatmap Matrix**:
-   * Visual: **Matrix Visual**.
-   * Rows: `dim_date[cohort_month]` (Format as YYYY-MM).
-   * Columns: `fact_sales[month_index]` (Represents month 0, 1, 2... since acquisition).
-   * Values: `[Cohort Retention %]`.
-   * **Gradient Conditional Formatting**:
-     * Go to Cell Elements ➡️ Turn on Background Color.
-     * Select **Format Style**: *Gradient*.
-     * Low Value (0%): Cool Light Gray/Slate (`#1E293B` or `#E2E8F0`).
-     * High Value (100%): Deep Royal Blue (`#1D4ED8` or `#1E40AF`).
-     * **Result**: An amazing visual retention curve that makes the cohort decay instantly readable!
-
----
-
-### Page 3: Customer Segmentation & RFM Matrix
-1. **Recency vs. Frequency Matrix Grid**:
-   * Visual: **Matrix Visual**.
-   * Rows: `fact_sales[r_score]` (Recency 1 to 5).
-   * Columns: `fact_sales[f_score]` (Frequency 1 to 5).
-   * Values: `[Active CustomersCount]` or `[Total Revenue]`.
-   * **Conditional Formatting**: Set background to a soft dual-color gradient (Orange/Coral for low score cells, Emerald Green for high score cells) to show high-risk vs. high-value clusters.
-2. **Dynamic Customer Detail Drill-Through**:
-   * Visual: **Table Visual**.
-   * Columns: `dim_customers[customer_id]`, `dim_customers[full_name]`, `dim_customers[country]`, `fact_sales[rfm_segment]`, `[Total Revenue]`.
-   * Interactivity: Selecting any cell in the *RFM Score Matrix* automatically filters this detailed table to show those exact customers (e.g. clicking R=1, F=1 isolates "Lost" customers, and clicking R=5, F=5 isolates "Champions").
-
----
-
-### Page 4: Clickstream & Marketing Attribution Analysis
-This page demonstrates advanced marketing analytics, linking web sessions and revenue.
-
-1. **Traffic Source ROI Funnel**:
-   * Visual: **Funnel Chart** or **Bar Chart**.
-   * Group: `fact_web_traffic[traffic_source]`.
-   * Values: `[Total Sessions]`.
-   * Secondary Tooltips: `[Converted Sessions]`, `[Session Conversion Rate %]`.
-2. **Channel Conversion Matrix**:
-   * Visual: **Matrix Visual**.
-   * Rows: `fact_web_traffic[traffic_source]`.
-   * Columns: `fact_web_traffic[device_type]`.
-   * Values: `[Session Conversion Rate %]` and `[Bounce Rate %]`.
-   * **Conditional Formatting**: Use a diverging red-to-green gradient for conversion rate, and green-to-red for bounce rate.
-3. **Attributed Revenue vs. Marketing Spend (CAC)**:
-   * Visual: **Scatter Chart** or **Combo Chart** (joining data from the `attribution_analysis` view/query in Section 5).
-   * X-Axis: `[Total Sessions]`.
-   * Y-Axis: `[Gross Revenue]`.
-   * Details: `[Traffic Source]`.
-   * Sizes: `[Average Order Value]`.
-
----
-
-## 4. Premium Dark Slate UI/UX Guidelines
-A premium visual aesthetic prevents the dashboard from looking "generic."
-
-### Color Theme JSON (Optional Import)
-Copy this theme JSON code and save as `ApexTheme.json`, then import into Power BI (*View ➡️ Themes dropdown ➡️ Browse for Themes*):
+### Color Tokens (Save as `CorporateTheme.json` and import into Power BI):
 ```json
 {
-  "name": "Apex Midnight Glass",
-  "dataColors": ["#00F2FE", "#D4AF37", "#3B82F6", "#10B981", "#EF4444", "#8B5CF6", "#F59E0B"],
-  "background": "#0B0F19",
-  "foreground": "#161F30",
+  "name": "Apex Enterprise Slate",
+  "dataColors": ["#00F2FE", "#10B981", "#8B5CF6", "#F59E0B", "#EF4444", "#3B82F6", "#EC4899"],
+  "background": "#080C14",
+  "foreground": "#111827",
   "tableAccent": "#00F2FE"
 }
 ```
 
-### Layout Wireframe Design
+### Visual Layout Grid (High Density):
 ```
-+--------------------------------------------------------------------------------------+
-|  [Logo] APEX GOODS: EXECUTIVE ANALYTICS            [Page 1] [Page 2] [Page 3] [Page 4]  |
-+--------------------------------------------------------------------------------------+
-|  +-------------------+  +-------------------+  +-------------------+  +------------+ |
-|  | TOTAL REVENUE     |  | ACTIVE CUSTOMERS  |  | TOTAL SESSIONS    |  | CONV. RATE | |
-|  | $824,450.00       |  | 985               |  | 24,150            |  | 3.12%   🟢 | |
-|  +-------------------+  +-------------------+  +-------------------+  +------------+ |
-|                                                                                      |
-|  +----------------------------------------+  +-------------------------------------+ |
-|  | REVENUE & PROFIT MARGIN TREND          |  | CATEGORY SALES BY COUNTRY (MATRIX)  | |
-|  |                                        |  |             US      CA      UK      | |
-|  | Bar: Sales ($)  |  Line: Margin (%)    |  | Tech     | [████]  [██]    [███]    | |
-|  |                                        |  | Apparel  | [███]   [█]     [██]     | |
-|  |  Jan  Feb  Mar  Apr  May  Jun          |  | Home     | [██]    [█]     [█]      | |
-|  +----------------------------------------+  +-------------------------------------+ |
-+--------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------+
+|  [Logo] APEXANALYTICS PORTAL   |   PAGE 1: B2C E-COMMERCE   [PAGE 2: B2B AGENCY]   [PAGE 3: ATTRIBUTION]  |
++------------------------------------------------------------------------------------------------+
+|  SLICER PANE (COLLAPSIBLE / SLIDE-OUT PANEL)                                                   |
+|  [Region Dropdown]   [Year Slicer]   [Industry Selector]   [Account Manager Multi-Select]     |
++------------------------------------------------------------------------------------------------+
+|  +-------------------+ +-------------------+ +-------------------+ +-------------------------+ |
+|  | TOTAL BILLING     | | MANAGED AD SPEND  | | OVERALL ROAS      | | AM TARGET ATTAINMENT    | |
+|  | $33.4M (YoY +12%) | | $54.2M            | | 12.11x            | | [████████░░░] 82.5%  🟢 | |
+|  +-------------------+ +-------------------+ +-------------------+ +-------------------------+ |
+|                                                                                                |
+|  +--------------------------------------------------+ +--------------------------------------+ |
+|  | DENSE ACCOUNT MANAGER PORTFOLIO MATRIX            | | CHANNELS EFFICIENCY GAUGES           | |
+|  | AM / Region / Client  | Billing | Spend | ROAS   | | TikTok  [████████████] 23.1x  🟢     | |
+|  | ▼ Michael Chang (APAC)                           | | YouTube [██████████░░] 23.2x  🟢     | |
+|  |   ├─ Acro Corp        | $2.4M   | $3.1M | 14.2x  | | Meta    [██████░░░░░░] 13.0x  🟡     | |
+|  |   └─ Beta Logistics   | $1.1M   | $1.5M | 11.1x  | | Google  [██░░░░░░░░░░] 5.9x   🔴     | |
+|  +--------------------------------------------------+ +--------------------------------------+ |
+|                                                                                                |
+|  +-------------------------------------------------------------------------------------------+ |
+|  | MONTH-OVER-MONTH CLIENT BILLING COHORT RETENTION HEATMAP (MATRIX VIEW)                     | |
+|  | Cohort Month | Active Clients | M0      | M1      | M2      | M3      | M4      | M5        | |
+|  | 2024-02      | 8              | [100%]  | [101%]  | [101%]  | [99%]   | [100%]  | [98%]     | |
+|  | 2024-03      | 12             | [100%]  | [98%]   | [97%]   | [97%]   | [95%]   | [92%]     | |
+|  +-------------------------------------------------------------------------------------------+ |
++------------------------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 5. Direct Connecting to your data
-1. Open **Power BI Desktop**.
-2. Click **Get Data** ➡️ select **Text/CSV**.
-3. Import the clean files from `data/processed/` folder:
-   * `dim_customers.csv`
-   * `dim_products.csv`
-   * `dim_date.csv`
-   * `fact_sales.csv`
-   * `fact_web_traffic.csv`
-4. Or, select **SQL Database / OLEDB** and connect to the local SQLite database compiled at `data/apex_analytics.db` to load database views directly!
-5. Import `attribution_analysis.sql` query as a **Custom SQL Query** to unlock immediate Page 4 visuals!
-6. Navigate to the **Model View** to establish the Galaxy Schema relationships outlined in Section 1.
+## 🔢 2. Advanced Enterprise DAX Measure Suite
+
+To build complex matrices and dynamic indicators, create a dedicated table named `_Measures` and implement these production-grade DAX formulas:
+
+### A. B2C E-Commerce Core Metrics
+* **Total B2C Sales Revenue**:
+  ```dax
+  B2C Total Revenue = SUM(fact_sales[line_subtotal])
+  ```
+* **B2C Units Sold**:
+  ```dax
+  B2C Units Sold = SUM(fact_sales[quantity])
+  ```
+* **B2C Average Order Value (AOV)**:
+  ```dax
+  B2C AOV = DIVIDE([B2C Total Revenue], DISTINCTCOUNT(fact_sales[order_id]), 0)
+  ```
+* **B2C E-Commerce Conversion Rate**:
+  ```dax
+  B2C Conversion Rate = DIVIDE(DISTINCTCOUNT(fact_sales[order_id]), COUNT(fact_web_traffic[session_id]), 0)
+  ```
+* **YoY Sales Growth %**:
+  ```dax
+  B2C YoY Growth % = 
+  VAR CurrentSales = [B2C Total Revenue]
+  VAR PriorYearSales = CALCULATE([B2C Total Revenue], SAMEPERIODLASTYEAR(dim_date[date]))
+  RETURN DIVIDE(CurrentSales - PriorYearSales, PriorYearSales, 0)
+  ```
+* **Customer Lifetime Value (CLV)**:
+  ```dax
+  B2C Customer CLV = 
+  DIVIDE([B2C Total Revenue], DISTINCTCOUNT(fact_sales[customer_id]), 0)
+  ```
+* **Active B2C Customers**:
+  ```dax
+  B2C Active Customers = DISTINCTCOUNT(fact_sales[customer_id])
+  ```
+* **Cohort Starting Customers**:
+  ```dax
+  B2C Cohort Starting Customers = 
+  CALCULATE(
+      [B2C Active Customers],
+      ALLEXCEPT(fact_sales, dim_date[year], dim_date[month_name]),
+      fact_sales[month_index] = 0
+  )
+  ```
+* **Cohort Retention %**:
+  ```dax
+  B2C Cohort Retention % = 
+  DIVIDE(
+      [B2C Active Customers],
+      [B2C Cohort Starting Customers],
+      0
+  )
+  ```
+
+### B. B2B Agency Performance Metrics
+* **Total Ad Spend Managed**:
+  ```dax
+  B2B Managed Ad Spend = SUM(fact_ad_performance[ad_spend])
+  ```
+* **B2B Client Revenue Generated**:
+  ```dax
+  B2B Client Revenue Generated = SUM(fact_ad_performance[client_conversion_revenue])
+  ```
+* **B2B Overall ROAS**:
+  ```dax
+  B2B Managed ROAS = 
+  DIVIDE(
+      [B2B Client Revenue Generated], 
+      [B2B Managed Ad Spend], 
+      0
+  )
+  ```
+* **B2B Cost Per Acquisition (CPA)**:
+  ```dax
+  B2B CPA = DIVIDE([B2B Managed Ad Spend], SUM(fact_ad_performance[conversions]), 0)
+  ```
+* **Monthly Retainer & Managed Ad Billing**:
+  ```dax
+  B2B Total Billing = SUM(fact_client_billing[total_billing_amount])
+  ```
+* **Account Manager Target Revenue Attainment %**:
+  ```dax
+  AM Target Attainment % = 
+  DIVIDE(
+      [B2B Total Billing], 
+      SUM(dim_account_managers[target_monthly_revenue]), 
+      0
+  )
+  ```
+* **Dynamic Target Achievement Alert**:
+  ```dax
+  Target Status Badge = 
+  VAR Attainment = [AM Target Attainment %]
+  RETURN 
+      IF(Attainment >= 1.0, "🏆 Target Exceeded",
+      IF(Attainment >= 0.8, "🟢 Target Met",
+      IF(Attainment >= 0.6, "🟡 At Risk", "🔴 Action Required")))
+  ```
+
+---
+
+## 📈 3. Deep-Dive Corporate Visual Setup (Step-by-Step)
+
+### Page 1: B2C E-Commerce Operational Matrix (The "Pivot" View)
+Instead of a simple bar chart, Page 1 will center around a **high-density performance matrix** that lets executives slice sales and sessions dynamically:
+
+1. **Category vs. Country Sales Matrix**:
+   * **Visual**: *Matrix Visual*.
+   * **Rows**: `dim_products[category]` ➡️ `dim_products[product_name]` *(Enables Drill-Down!)*.
+   * **Columns**: `dim_customers[country]`.
+   * **Values**: `[B2C Total Revenue]`, `[B2C Customer CLV]`.
+   * **Conditional Formatting (Heatmap)**: 
+     * Right-click `B2C Total Revenue` in the visual list ➡️ *Conditional Formatting* ➡️ *Background Color*.
+     * Format style: *Gradient*. Select `#0A0F1D` for minimum, `#1E3A8A` for mid, and `#3B82F6` (Electric Blue) for maximum to create a beautiful corporate heat map.
+
+2. **Customer Purchase Frequency RFM Heat Grid**:
+   * **Visual**: *Matrix Visual*.
+   * **Rows**: `fact_sales[r_score]` (Recency 1 to 5).
+   * **Columns**: `fact_sales[f_score]` (Frequency 1 to 5).
+   * **Values**: `[B2C Total Revenue]`.
+   * **Conditional Formatting**: Diverging gradient from Coral/Red (low frequency) to Dark Blue/Teal (high frequency). 
+   * **Interactivity**: Serves as a dynamic filter. Clicking any grid cell automatically filters the raw detail Table view at the bottom of the page.
+
+---
+
+### Page 2: B2B Agency Portfolio & Client Retention (The "Executive Ledger")
+This page acts as the operational nerve center of the digital marketing agency:
+
+1. **Account Manager Portfolio Drill-Down Grid**:
+   * **Visual**: *Matrix Visual*.
+   * **Rows Hierarchy**: `dim_account_managers[region]` ➡️ `dim_account_managers[name]` ➡️ `dim_clients[client_name]`.
+   * **Values**: `[B2B Total Billing]`, `[B2B Managed Ad Spend]`, `[B2B Managed ROAS]`, `[Target Status Badge]`.
+   * **Features**:
+     * Expand/Collapse: The user can click `+` next to "APAC" to see all APAC managers, and click `+` next to "Michael Chang" to see his individual corporate clients and how much billing they generate.
+     * KPI Badges: The `Target Status Badge` is color-coded using conditional formatting rules (Text color) so that `🔴 Action Required` instantly glows bright red.
+
+2. **MoM Client Billing Cohort Matrix**:
+   * **Visual**: *Matrix Visual*.
+   * **Rows**: `client_billing_cohorts[cohort_month]` (YYYY-MM).
+   * **Columns**: `client_billing_cohorts[month_index]` (0, 1, 2, 3...).
+   * **Values**: `SUM(client_billing_cohorts[revenue_retention_pct])` / 100.
+   * **Formatting**: Set values to Percentage (`0.0%`).
+   * **Heatmap Gradient**: Format elements using background gradients scaling from `#111827` (Dark slate gray for 0%) to `#10B981` (Emerald Green for 100%+). This instantly visualizes client lifecycle longevity.
+
+---
+
+### Page 3: Marketing Multi-Touch Attribution & Channel ROI (The "Attribution Center")
+This page tracks which marketing channels are converting traffic and generating B2B/B2C revenue:
+
+1. **Traffic Channel Cross-Tabulation Grid**:
+   * **Visual**: *Matrix Visual*.
+   * **Rows**: `view_marketing_attribution[traffic_source]`.
+   * **Columns**: `dim_date[year]`.
+   * **Values**: `SUM(view_marketing_attribution[total_sessions])`, `AVERAGE(view_marketing_attribution[session_conversion_rate_pct])`, `SUM(view_marketing_attribution[gross_revenue])`, `AVERAGE(view_marketing_attribution[bounce_rate_pct])`.
+   * **Data Bars**: Add positive teal data bars to `gross_revenue` to show channel scale.
+
+2. **Channel Efficiency Correlation Scatter**:
+   * **Visual**: *Scatter Chart*.
+   * **X-Axis**: `Average session_conversion_rate_pct`.
+   * **Y-Axis**: `Average bounce_rate_pct`.
+   * **Legend**: `traffic_source`.
+   * **Size**: `SUM(gross_revenue)`.
+   * **Purpose**: Executives can immediately identify channels that convert highly (bottom right quadrant) vs. channels that represent dead spend (top left quadrant).
+
+---
+
+## 🎛️ 4. Collapsible Slicer & Navigation Panel
+To maximize canvas space and look incredibly sleek, we build a **Collapsible Slicer Panel** utilizing Power BI Bookmarks and Selection panes:
+
+1. **Create the Slicer Panel**:
+   * Draw a vertical rectangle shape on the left side of the canvas (Color: `#111827`, Border: none, Transparency: 5%).
+   * Insert slicers into this rectangle:
+     * **Region Slicer**: `dim_account_managers[region]` (Format: Tile or Dropdown).
+     * **Industry Slicer**: `dim_clients[industry]` (Format: Dropdown).
+     * **Date Slider**: `dim_date[date]` (Format: Between).
+     * **Account Manager**: `dim_account_managers[name]` (Format: Dropdown with search enabled).
+2. **Setup Interactive Show/Hide Buttons**:
+   * Add an icon button (e.g., "Filter" icon) at the top of the page.
+   * Create two Bookmarks in the Bookmark Pane:
+     * **Bookmark A**: `Slicer_Open` (Rectangle shape and slicers are set to **Visible** in Selection Pane).
+     * **Bookmark B**: `Slicer_Closed` (Rectangle shape and slicers are set to **Hidden** in Selection Pane).
+   * Assign the `Slicer_Open` action to your Filter button, and assign `Slicer_Closed` to a "Close" arrow inside the panel.
+   * **Result**: The slicer panel smoothly glides out when clicked, allowing deep, dynamic slicing without cluttering the beautiful dashboard grid!

@@ -6,7 +6,6 @@ from src.etl.db_loader import DatabaseLoader
 from src.etl.data_validation import DataValidator
 from src.etl.sql_executor import AnalyticsSQLExecutor
 
-# Configure beautiful logging formatting
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -14,50 +13,43 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
-logger = logging.getLogger("ApexAnalytics_Main")
+logger = logging.getLogger("DataPipeline")
 
 def main():
-    logger.info("================================================================")
-    logger.info("     APEXANALYTICS: END-TO-END DATA ENGINEERING PIPELINE")
-    logger.info("================================================================")
+    logger.info("Starting B2C E-Commerce Data Pipeline")
     
     try:
-        # Step 1: Generate Synthetic Raw Data
-        logger.info("\n--- STEP 1: GENERATING HIGH-FIDELITY RAW DATA ---")
+        # Step 1: Generate raw synthetic data
+        logger.info("Step 1: Generating raw transactional data")
         generate_data()
         
-        # Step 2: Clean & Model Star Schema (ETL)
-        logger.info("\n--- STEP 2: RUNNING ETL PIPELINE (CLEAN & STAR SCHEMA) ---")
+        # Step 2: Clean and model star schema (ETL)
+        logger.info("Step 2: Running ETL transformations")
         pipeline = EcomETL()
         pipeline.run_pipeline()
         
-        # Step 3: Load Data into SQLite Database
-        logger.info("\n--- STEP 3: LOADING DATA INTO RELATIONAL SQL DATABASE ---")
+        # Step 3: Load cleaned data into local SQLite database
+        logger.info("Step 3: Loading relational schema into database")
         loader = DatabaseLoader()
         loader.load_database()
         
-        # Step 4: Run Data Quality Validations
-        logger.info("\n--- STEP 4: RUNNING DATA QUALITY VALIDATION SUITE ---")
+        # Step 4: Run data quality validations
+        logger.info("Step 4: Running data quality test suite")
         validator = DataValidator()
         validation_success = validator.run_validations()
         
-        # Step 5: Execute Advanced Analytical Queries
-        logger.info("\n--- STEP 5: COMPILING ADVANCED SQL ANALYTICS (RFM & COHORTS) ---")
+        # Step 5: Run analytical queries
+        logger.info("Step 5: Compiling SQL analytical models (RFM & Cohorts)")
         executor = AnalyticsSQLExecutor()
         executor.execute_and_export()
         
-        logger.info("\n================================================================")
         if validation_success:
-            logger.info("🎉 PIPELINE EXECUTION SUCCESSFUL: All tables cleaned, loaded, & analyzed!")
-            logger.info("Your SQLite database is compiled at: data/apex_analytics.db")
-            logger.info("Clean star schema & analytical CSVs are exported at: data/processed/")
+            logger.info("Data pipeline completed successfully. SQLite DB compiled at: data/apex_analytics.db")
         else:
-            logger.warning("⚠️ PIPELINE COMPLETED WITH DATA VALIDATION ERRORS.")
-            logger.warning("Review report details at: data/data_validation_report.csv")
-        logger.info("================================================================")
+            logger.warning("Pipeline completed with data validation errors. Review: data/data_validation_report.csv")
         
     except Exception as e:
-        logger.error(f"\n❌ PIPELINE CRITICAL ERROR: {e}")
+        logger.error(f"Pipeline failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

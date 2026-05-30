@@ -26,8 +26,7 @@ class DataValidator:
         
         def log_test(test_name, success, details):
             status = "PASSED" if success else "FAILED"
-            emoji = "✅" if success else "❌"
-            logger.info(f"{emoji} [{test_name}]: {status} - {details}")
+            logger.info(f"[{test_name}]: {status} - {details}")
             validation_results.append({
                 "test_name": test_name,
                 "status": status,
@@ -146,10 +145,10 @@ class DataValidator:
         logger.info("Validation report written to: data/data_validation_report.csv")
         
         if all_passed:
-            logger.info("🎉 DATA VALIDATION SUMMARY: 100% PASSED. Data quality is pristine!")
+            logger.info("DATA VALIDATION SUMMARY: 100% PASSED. Data quality is pristine.")
             return True
         else:
-            logger.warning("⚠️ DATA VALIDATION SUMMARY: Some checks FAILED. Review report details!")
+            logger.warning("DATA VALIDATION SUMMARY: Some checks FAILED. Review report details.")
             return False
 
 class AgencyDataValidator:
@@ -169,8 +168,7 @@ class AgencyDataValidator:
         
         def log_test(test_name, success, details):
             status = "PASSED" if success else "FAILED"
-            emoji = "✅" if success else "❌"
-            logger.info(f"{emoji} [{test_name}]: {status} - {details}")
+            logger.info(f"[{test_name}]: {status} - {details}")
             validation_results.append({
                 "test_name": test_name,
                 "status": status,
@@ -292,10 +290,10 @@ class AgencyDataValidator:
         logger.info("Agency validation report written to: data/agency_validation_report.csv")
         
         if all_passed:
-            logger.info("🎉 B2B AGENCY DATA VALIDATION: 100% PASSED. Data quality is pristine!")
+            logger.info("B2B AGENCY DATA VALIDATION: 100% PASSED. Data quality is pristine.")
             return True
         else:
-            logger.warning("⚠️ B2B AGENCY DATA VALIDATION: Some checks FAILED. Review report details!")
+            logger.warning("B2B AGENCY DATA VALIDATION: Some checks FAILED. Review report details.")
             return False
 
 if __name__ == "__main__":

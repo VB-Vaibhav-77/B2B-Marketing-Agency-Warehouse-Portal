@@ -50,7 +50,7 @@ class AnalyticsSQLExecutor:
                 logger.info(f"Saving {df.shape[0]} results rows to CSV at: {output_path}...")
                 df.to_csv(output_path, index=False)
                 
-            logger.info("🎉 All advanced SQL analytical queries executed and exported successfully!")
+            logger.info("All advanced SQL analytical queries executed and exported successfully!")
             
         except Exception as e:
             logger.error(f"Error executing and exporting analytics: {e}")
